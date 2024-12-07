@@ -3,6 +3,7 @@ import { computed, ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 
 const sites = ref([]);
+const php_global_version = ref("");
 
 const site_urls = computed(() => {
   return sites.value.map((site: string) => {
@@ -11,10 +12,16 @@ const site_urls = computed(() => {
   });
 });
 
+async function fetch_php_global_version() {
+  php_global_version.value = (await invoke("get_php_global_versions"))[0].version;
+}
+
 async function main() {
   const paths: string = await invoke("get_links");
   const path_list = JSON.parse(paths);
   sites.value = path_list;
+
+  await fetch_php_global_version();
 }
 
 main();
@@ -52,7 +59,7 @@ main();
 
       <tbody>
         <tr v-for="(site, index) in sites" :key="site">
-          <td class="px-4 py-4 border-b border-white/10">
+          <td class="px-4 py-3 border-b border-white/10">
             <a :href="site_urls[index]" target="_blank">
               {{ site_urls[index] }}
             </a>
@@ -64,8 +71,10 @@ main();
             </span>
           </td>
 
-          <td class="px-4 py-4 border-b border-white/10">
-            <span class="text-sm font-normal">PHP</span>
+          <td class="px-4 py-3 border-b border-white/10">
+            <span class="text-sm font-normal">
+              {{ php_global_version }}
+            </span>
           </td>
         </tr>
       </tbody>
